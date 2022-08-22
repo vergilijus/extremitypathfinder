@@ -36,7 +36,7 @@ def compute_repr_n_dist(np_vector: np.ndarray) -> Tuple[float, float]:
     :return:
     """
     dx, dy = np_vector
-    distance = math.sqrt(dx**2 + dy**2)  # l-2 norm
+    distance = math.sqrt(dx ** 2 + dy ** 2)  # l-2 norm
     if distance == 0.0:
         angle_measure = np.nan
     else:
@@ -567,7 +567,10 @@ def find_visible(
     # all edges have been checked
     # all remaining vertices were not concealed behind any edge and hence are visible
     visibles.update(candidates)
-    return clean_visibles(visibles, representations, distances)
+    non_vertices = set(i for i in visibles if not extremity_mask[i])
+    cleaned_visibles = clean_visibles(visibles, representations, distances)
+    cleaned_visibles.update(non_vertices)
+    return cleaned_visibles
 
 
 def find_visible_and_in_front(
@@ -695,7 +698,6 @@ def compute_graph(
     extremity_mask: np.ndarray,
     vertex_edge_idxs: np.ndarray,
 ) -> t.Graph:
-
     graph = t.Graph()
     # IMPORTANT: add all extremities (even if they turn out to be dangling in the end),
     # adding start and goal nodes at query time might connect them!
@@ -709,7 +711,7 @@ def compute_graph(
         #  -> do not check extremities which have been checked already
         #  (must give the same result when algorithms are correct)
         # the origin extremity itself must also not be checked when looking for visible neighbours
-        candidate_idxs = set(extremity_indices[extr_ptr + 1 :])
+        candidate_idxs = set(extremity_indices[extr_ptr + 1:])
         # Note: also the nodes previously connected to the current origin must be considered for removal
         candidates_in_front = candidate_idxs | set(graph.neighbors(origin_idx))
         idxs_in_front, visible_idxs = find_visible_and_in_front(
